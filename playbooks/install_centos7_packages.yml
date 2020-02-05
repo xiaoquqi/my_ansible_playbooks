@@ -1,0 +1,21 @@
+# Change this file when you need new packages
+- hosts: all
+
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Install yum packages
+      package:
+        name: "{{ item }}"
+        state: present
+      become: True
+      with_items:
+        - ntp
+
+    - name: Start time sync service
+      service:
+        name: ntpd
+        state: started
+        enabled: yes
+      become: True

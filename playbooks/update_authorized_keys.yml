@@ -1,0 +1,11 @@
+# Update ~/.ssh/authorized_keys use the key files under keys
+- hosts: all
+
+  tasks:
+    - name: Set up multiple authorized keys
+      authorized_key:
+        user: root
+        state: present
+        key: '{{ item }}'
+      with_file:
+        - keys/master.pub

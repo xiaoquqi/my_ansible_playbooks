@@ -1,0 +1,44 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Change the hostname to our standard
+      hostname:
+        name="{{ inventory_hostname }}"
+      when:
+        ansible_fqdn != ansible_ssh_host
+
+    - name: restart machine
+      shell: 'sleep 5 && reboot'
+      async: 1
+      poll: 0
+      ignore_errors: true
+      when:
+        reboot is defined
+
+    - name: Wait for the reboot to complete if there was a change.
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300
+      when:
+        reboot is defined
+
+    - name: Fix /etc/hosts removing the old hostname
+      tags:
+        - hosts
+      lineinfile:
+        state=present
+        dest=/etc/hosts
+        line="{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ ansible_hostname }}"
+        regexp="^{{ ansible_default_ipv4.address }}"
+      when:
+        ansible_fqdn != inventory_hostname
+
+    - name: Validate ansible_fqdn == inventory_hostname
+      tags:
+        - validate
+      assert:
+        that:
+          ansible_fqdn == inventory_hostname

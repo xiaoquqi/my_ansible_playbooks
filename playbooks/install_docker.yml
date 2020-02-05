@@ -1,0 +1,56 @@
+- hosts: all
+
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Install docker
+      shell:  curl -sSL https://get.daocloud.io/docker | sh -s -- "--mirror" "Aliyun"
+
+    - name: Ensure docker config directory
+      file:
+        path: /etc/docker/
+        state: directory
+        recurse: yes
+      become: True
+
+    - name: Update docker daemon config
+      copy:
+        content: '{"registry-mirrors": ["http://b0f4fd8f.m.daocloud.io"],"insecure-registries": ["192.168.10.10"]}'
+        dest: /etc/docker/daemon.json
+
+    - name: Ensure docker service directory
+      file:
+        path: /etc/systemd/system/docker.service.d/
+        state: directory
+        recurse: yes
+      become: True
+
+    # For OpenStack Kolla Deployment
+    #- name: Update docker service config
+    #  copy:
+    #    content: |
+    #             [Service]
+    #             MountFlags=shared
+    #    dest: /etc/systemd/system/docker.service.d/kolla.conf
+
+    - name: Reload docker service file
+      become: True
+      systemd:
+        name: docker
+        daemon_reload: yes
+
+    - name: Enable Docker
+      become: True
+      service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      with_items:
+        - docker
+
+    - name: Start docker
+      service:
+        name: docker
+        state: started
+      become: True

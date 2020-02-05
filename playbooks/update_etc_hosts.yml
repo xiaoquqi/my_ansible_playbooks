@@ -1,0 +1,15 @@
+---
+- hosts: all
+  gather_facts: yes
+ 
+  tasks:
+    - name: Add IP address of all hosts to all hosts
+      tags:
+        - hosts
+      lineinfile:
+        state=present
+        dest=/etc/hosts
+        regexp="^{{ hostvars[item].ansible_default_ipv4.address }}"
+        line="{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_hostname }}"
+      with_items:
+        - '{{ groups.all }}'
