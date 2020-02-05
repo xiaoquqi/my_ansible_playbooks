@@ -1,0 +1,13 @@
+# When we use cloud image, root user is not allowed to login, due to
+# warning message in /root/.ssh/authorized_keys.
+# This playbooks try to replace the root authorized_keys with centos.
+---
+- hosts: all
+
+  tasks:
+    - name: Replace root authorized_keys
+      copy:
+        src: /home/centos/.ssh/authorized_keys
+        dest: /root/.ssh/authorized_keys
+        remote_src: true
+      become: true
