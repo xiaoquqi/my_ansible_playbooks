@@ -1,3 +1,6 @@
 *.swp
 *.swp
 *.retry
+hosts.ini
+all-in-one
+multinode

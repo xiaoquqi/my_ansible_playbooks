@@ -15,8 +15,8 @@
       become: True
 
     - name: Update docker daemon config
-      copy:
-        content: '{"registry-mirrors": ["http://b0f4fd8f.m.daocloud.io"],"insecure-registries": ["192.168.10.10"]}'
+      template:
+        src: etc/docker/daemon.json
         dest: /etc/docker/daemon.json
 
     - name: Ensure docker service directory

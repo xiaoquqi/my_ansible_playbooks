@@ -14,4 +14,12 @@ trusted-host =  mirrors.aliyun.com
 index-url = https://mirrors.aliyun.com/pypi/simple
 EOF
  
-pip install ansible
+pip install 'ansible<2.10'
+
+mkdir -p /etc/ansible
+tee /etc/ansible/ansible.cfg << 'EOF'
+[defaults]
+host_key_checking=False
+pipelining=True
+forks=100
+EOF

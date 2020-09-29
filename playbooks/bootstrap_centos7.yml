@@ -45,6 +45,9 @@
       when:
         - firewalld_check.rc == 0
 
+    - name: Download aliyun base repo
+      get_url: url=http://mirrors.aliyun.com/repo/Centos-7.repo dest=/etc/yum.repos.d/CentOS-Base.repo
+
     - name: Download aliyun epel repo
       get_url: url=http://mirrors.aliyun.com/repo/epel-7.repo dest=/etc/yum.repos.d/epel.repo
 
@@ -69,13 +72,13 @@
       with_items:
         - deltarpm
 
-    #- name: Install yum packages
-    #  package:
-    #    name: "{{ item }}"
-    #    state: present
-    #  become: True
-    #  with_items:
-    #    - ntp
+    - name: Install yum packages
+      package:
+        name: "{{ item }}"
+        state: present
+      become: True
+      with_items:
+        - chrony
 
     - name: Remove packages
       package:
@@ -87,12 +90,12 @@
         - iscsi-initiator-utils
       become: True
 
-    #- name: Start time sync service
-    #  service:
-    #    name: ntpd
-    #    state: started
-    #    enabled: yes
-    #  become: True
+    - name: Start time sync service
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+      become: True
 
     - name: Change state of selinux
       selinux:
