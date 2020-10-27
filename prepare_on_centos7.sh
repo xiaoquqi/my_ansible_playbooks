@@ -4,6 +4,11 @@ echo "Installing sshpass..."
 yum install -y sshpass
 echo "sshpass is installed."
 
+# Add local mirror
+curl -o /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+curl -o /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+yum clean all && yum makecache
+
 # Install pip and ansible
 yum install -y python-pip
  
