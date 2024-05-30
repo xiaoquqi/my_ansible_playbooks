@@ -1,0 +1,95 @@
+- hosts: all
+
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Ensure localhost in /etc/hosts
+      lineinfile:
+        dest: /etc/hosts
+        regexp: "^127.0.0.1.*"
+        line: "127.0.0.1 localhost"
+        state: present
+      become: True
+
+    - name: Backup the original APT sources list
+      become: True
+      command: cp /etc/apt/sources.list /etc/apt/sources.list.bak
+      args:
+        creates: /etc/apt/sources.list.bak
+
+    - name: Replace APT sources with Tsinghua University mirrors
+      become: True
+      copy:
+        dest: /etc/apt/sources.list
+        content: |
+          deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ {{ ansible_distribution_release }} main restricted universe multiverse
+          deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ {{ ansible_distribution_release }}-security main restricted universe multiverse
+          deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ {{ ansible_distribution_release }}-updates main restricted universe multiverse
+          deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ {{ ansible_distribution_release }}-proposed main restricted universe multiverse
+          deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ {{ ansible_distribution_release }}-backports main restricted universe multiverse
+
+    - name: Update APT cache
+      become: True
+      apt:
+        update_cache: yes
+
+    - name: Check if NetworkManager is installed
+      command: systemctl status NetworkManager
+      register: nm_status
+      ignore_errors: True
+
+    - name: Disable NetworkManager if it is installed
+      become: True
+      service:
+        name: NetworkManager
+        enabled: false
+        state: stopped
+      when: nm_status.rc == 0
+      ignore_errors: True
+
+    - name: Check if ufw is installed
+      command: dpkg -l ufw
+      register: ufw_check
+      failed_when: ufw_check.rc > 1
+
+    - name: Disable ufw
+      become: True
+      service:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      with_items:
+        - ufw
+      when:
+        - ufw_check.rc == 0
+
+    - name: Install required packages
+      package:
+        name: "{{ item }}"
+        state: present
+      become: True
+      with_items:
+        - chrony
+
+    - name: Remove unnecessary packages
+      package:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - libvirt0
+        - libvirt-daemon-system
+        - open-iscsi
+      become: True
+
+    - name: Start time sync service
+      service:
+        name: chrony
+        state: started
+        enabled: yes
+      become: True
+
+    - name: Ensure UFW is disabled
+      ufw:
+        state: disabled
+      become: True

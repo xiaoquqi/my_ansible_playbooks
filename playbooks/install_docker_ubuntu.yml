@@ -1,0 +1,65 @@
+- hosts: all
+
+  tasks:
+    - name: Gather facts
+      setup:
+
+    - name: Install Docker from Ubuntu repository
+      become: true
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Install Docker Compose
+      become: true
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Ensure docker config directory
+      file:
+        path: /etc/docker/
+        state: directory
+        recurse: yes
+      become: True
+
+    - name: Update docker daemon config
+      template:
+        src: etc/docker/daemon.json
+        dest: /etc/docker/daemon.json
+
+    - name: Ensure docker service directory
+      file:
+        path: /etc/systemd/system/docker.service.d/
+        state: directory
+        recurse: yes
+      become: True
+
+    # For OpenStack Kolla Deployment
+    #- name: Update docker service config
+    #  copy:
+    #    content: |
+    #             [Service]
+    #             MountFlags=shared
+    #    dest: /etc/systemd/system/docker.service.d/kolla.conf
+
+    - name: Reload docker service file
+      become: True
+      systemd:
+        name: docker
+        daemon_reload: yes
+
+    - name: Enable Docker
+      become: True
+      service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      with_items:
+        - docker
+
+    - name: Start docker
+      service:
+        name: docker
+        state: started
+      become: True
