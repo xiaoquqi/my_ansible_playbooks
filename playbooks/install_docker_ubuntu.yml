@@ -27,7 +27,7 @@
 
     - name: Update docker daemon config
       template:
-        src: etc/docker/daemon.json
+        src: etc/docker/daemon.ubuntu2204.json
         dest: /etc/docker/daemon.json
 
     - name: Ensure docker service directory
